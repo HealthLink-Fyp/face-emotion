@@ -2,7 +2,7 @@ import time
 from helpers import detect_single_face, predict, b64_to_image
 
 
-with open("cb-base64-string.txt", "r") as f:
+with open("b64.txt", "r") as f:
     IMAGE = b64_to_image(f.read())
 
 
