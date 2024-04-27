@@ -1,13 +1,11 @@
 import os
 import cv2
-import base64
 import numpy as np
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import tensorflow as tf  # noqa: F401, E402
 from keras.models import load_model  # noqa: E402
-
 
 model = load_model("utils/model.h5")
 
@@ -17,17 +15,16 @@ OBJECTS = ("angry", "disgust", "fear", "happy", "sad", "surprise", "neutral")
 face_cascade = cv2.CascadeClassifier("utils/face.xml")
 
 
-def b64_to_image(b64_string):
+def binary_to_image(binary_data):
     """
-    Convert base64 string to image
+    Convert binary data to image
     """
-    sbuf = base64.decodebytes(b64_string.encode())
-    pimg = np.frombuffer(sbuf, dtype=np.uint8)
-    image = cv2.imdecode(pimg, cv2.IMREAD_UNCHANGED)
-    if isinstance(image.shape, tuple):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)        
+    nparr = np.frombuffer(binary_data, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if image is not None:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return image
-    print("Invalid image")
+    print("Invalid image, unable to convert")
     return None
 
 
@@ -51,6 +48,7 @@ def preprocessing(face_image):
     """
 
     x = cv2.resize(face_image, (SIZE, SIZE))
+    print(x.shape)
     x = x.reshape(x.shape + (1,))
     x = np.array(x, dtype="float32")
     x = np.expand_dims(x, axis=0)
@@ -61,12 +59,12 @@ def preprocessing(face_image):
     return None
 
 
-def predict(b64_string):
+def predict(binary_data):
     """
     Load the model and predict emotions from the image
     """
 
-    image = b64_to_image(b64_string)
+    image = binary_to_image(binary_data)
     if image is None:
         return None
     face_image = detect_single_face(image)
